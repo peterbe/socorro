@@ -83,6 +83,7 @@ application='CronTabber'
     # name: database_port
     # doc: the port for the database
     # converter: int
+    # OPS - set once
     #database_port='5432'
 
     # name: database_user
