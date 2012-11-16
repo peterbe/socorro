@@ -6,28 +6,14 @@ application='CronTabber'
 [crontabber]
 
     # name: jobs
-    # doc: None
     # converter: class_list_converter
-    jobs='''
-        socorro.cron.jobs.weekly_reports_partitions.WeeklyReportsPartitionsCronApp|7d
-        socorro.cron.jobs.matviews.ProductVersionsCronApp|1d|02:00
-        socorro.cron.jobs.matviews.SignaturesCronApp|1d|02:00
-        socorro.cron.jobs.matviews.TCBSCronApp|1d|02:00
-        socorro.cron.jobs.matviews.ADUCronApp|1d|02:00\
-        socorro.cron.jobs.matviews.HangReportCronApp|1d|02:00
-        socorro.cron.jobs.matviews.NightlyBuildsCronApp|1d|02:00
-        socorro.cron.jobs.matviews.DuplicatesCronApp|1h
-        socorro.cron.jobs.matviews.ReportsCleanCronApp|1h
-        socorro.cron.jobs.bugzilla.BugzillaCronApp|1h
-        socorro.cron.jobs.matviews.BuildADUCronApp|1d|02:00
-        socorro.cron.jobs.matviews.CrashesByUserCronApp|1d|02:00
-        socorro.cron.jobs.matviews.CrashesByUserBuildCronApp|1d|02:00
-        socorro.cron.jobs.matviews.CorrelationsCronApp|1d|02:00
-        socorro.cron.jobs.matviews.HomePageGraphCronApp|1d|02:00
-        socorro.cron.jobs.matviews.HomePageGraphBuildCronApp|1d|02:00
-        socorro.cron.jobs.matviews.TCBSBuildCronApp|1d|02:00
-        socorro.cron.jobs.matviews.ExplosivenessCronApp|1d|02:00
-    '''
+    # All jobs are configured inside crontabber.py
+    # To override any you have to override them all
+    #jobs='''
+    #    examples:
+    #    socorro.cron.jobs.weekly_reports_partitions.WeeklyReportsPartitionsCronApp|7d
+    #    socorro.cron.jobs.matviews.ProductVersionsCronApp|1d|02:00
+    #'''
 
     # name: database_file
     # doc: Location of file where job execution logs are stored
@@ -159,4 +145,3 @@ application='CronTabber'
     # converter: int
     # OPS - set once
     #syslog_port='514'
-
