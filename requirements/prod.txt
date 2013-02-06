@@ -11,3 +11,6 @@ statsd==0.5.1
 suds==0.4
 thrift==0.8.0
 web.py==0.36
+# applicable if you want to use queued collectors
+hiredis==0.1.1
+redis==2.7.2
