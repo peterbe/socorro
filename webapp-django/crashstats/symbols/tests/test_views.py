@@ -43,6 +43,7 @@ class TestViews(BaseTestViews):
         self.uploaded_keys = {}
         self.known_bucket_keys = {}
         self.created_buckets = []
+        self.created_keys = []
         mocked_connect_s3 = self.patcher.start()
 
         def mocked_get_bucket(*a, **k):
@@ -60,6 +61,7 @@ class TestViews(BaseTestViews):
                 mocked_key.set_contents_from_string.side_effect = mocked_set
                 mocked_key.key = key_name
                 mocked_key.bucket = mocked_bucket
+                self.created_keys.append(mocked_key)
                 return mocked_key
 
             def mocked_get_key(key_name):
@@ -222,6 +224,8 @@ class TestViews(BaseTestViews):
         eq_(symbol_upload.content, line)
         eq_(symbol_upload.content_type, 'text/plain')
         ok_(self.uploaded_keys)
+        # the mocked key object should have its content_type set too
+        eq_(self.created_keys[0].content_type, 'text/plain')
         eq_(self.created_buckets, [
             (
                 settings.SYMBOLS_BUCKET_DEFAULT_NAME,
