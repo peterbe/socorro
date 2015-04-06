@@ -39,6 +39,8 @@ class TestViews(BaseTestViews):
         super(TestViews, self).setUp()
         self.tmp_dir = tempfile.mkdtemp()
 
+        settings.SYMBOLS_MIME_OVERRIDES['jpeg'] = 'text/plain'
+
         self.patcher = mock.patch('crashstats.symbols.views.boto.connect_s3')
         self.uploaded_keys = {}
         self.known_bucket_keys = {}
@@ -67,6 +69,7 @@ class TestViews(BaseTestViews):
                 if key_name in self.known_bucket_keys:
                     mocked_key = mock.Mock()
                     mocked_key.key = key_name
+                    mocked_key.content_type = 'application/binary-octet-stream'
                     mocked_key.size = self.known_bucket_keys[key_name]
                     mocked_key.bucket = mocked_bucket
                     return mocked_key
@@ -218,6 +221,7 @@ class TestViews(BaseTestViews):
             'south-africa-flag.jpeg'
         )
         eq_(symbol_upload.content, line)
+        eq_(symbol_upload.content_type, 'text/plain')
         ok_(self.uploaded_keys)
         eq_(self.created_buckets, [
             (
