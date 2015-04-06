@@ -39,8 +39,6 @@ class TestViews(BaseTestViews):
         super(TestViews, self).setUp()
         self.tmp_dir = tempfile.mkdtemp()
 
-        settings.SYMBOLS_MIME_OVERRIDES['jpeg'] = 'text/plain'
-
         self.patcher = mock.patch('crashstats.symbols.views.boto.connect_s3')
         self.uploaded_keys = {}
         self.known_bucket_keys = {}
@@ -202,12 +200,13 @@ class TestViews(BaseTestViews):
         eq_(response.status_code, 200)
 
         # now we can post
-        with open(ZIP_FILE) as file_object:
-            response = self.client.post(
-                url,
-                {'file': file_object}
-            )
-            eq_(response.status_code, 302)
+        with self.settings(SYMBOLS_MIME_OVERRIDES={'jpeg': 'text/plain'}):
+            with open(ZIP_FILE) as file_object:
+                response = self.client.post(
+                    url,
+                    {'file': file_object}
+                )
+                eq_(response.status_code, 302)
 
         symbol_upload = models.SymbolsUpload.objects.get(user=user)
         eq_(symbol_upload.filename, os.path.basename(ZIP_FILE))
