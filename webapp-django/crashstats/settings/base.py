@@ -555,7 +555,7 @@ DATASERVICE_CONFIG_BASE.update({
                 'aPassword'
             ),
             'database_username': config(
-                'DATASERVICE_DATABASE_PASSWORD',
+                'DATASERVICE_USERNAME',
                 'breakpad_rw'
             ),
             'database_hostname': config(
