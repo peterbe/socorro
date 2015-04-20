@@ -555,7 +555,7 @@ DATASERVICE_CONFIG_BASE.update({
                 'aPassword'
             ),
             'database_username': config(
-                'DATASERVICE_USERNAME',
+                'DATASERVICE_DATABASE_USERNAME',
                 'breakpad_rw'
             ),
             'database_hostname': config(
@@ -566,7 +566,7 @@ DATASERVICE_CONFIG_BASE.update({
                 'DATASERVICE_DATABASE_NAME',
                 'breakpad'
             ),
-            'database_name': config(
+            'database_port': config(
                 'DATASERVICE_DATABASE_PORT',
                 '5432'
             ),
