@@ -1,3 +1,5 @@
+import isodate
+
 from django import forms
 
 
@@ -115,6 +117,12 @@ class DateTimeField(MultiplePrefixedValueField, forms.DateTimeField):
             return value.isoformat()
         except AttributeError:  # when value is None
             return value
+
+    def strptime(self, value, format):
+        try:
+            return isodate.parse_datetime(value)
+        except ValueError:
+            return super(DateTimeField, self).strptime(value, format)
 
 
 class StringField(MultipleValueField):

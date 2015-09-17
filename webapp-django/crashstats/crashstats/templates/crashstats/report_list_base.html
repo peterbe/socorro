@@ -9,6 +9,12 @@ Crash Reports in {{ signature }}
 
     <div class="page-heading">
         <h2>Crash Reports for {{ signature }}</h2>
+        &nbsp;&nbsp;
+        <em>
+            <a href="{{ url('signature:signature_report') }}?{{ super_search_query_string }}">
+                See the equivalent Signature report page
+            </a>
+        </em>
         <div>
             <ul class="options">
               {% for day in [3, 7, 14, 28] %}
