@@ -276,7 +276,7 @@ def get_super_search_style_params(**kwargs):
         raise ValueError('"signature" is a mandatory parameter')
 
     params = {
-        'signature': kwargs.get('signature'),
+        'signature': kwargs['signature'],
         'product': kwargs.get('product'),
         'platform': kwargs.get('platform'),
         'date': [],
