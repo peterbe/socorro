@@ -1,6 +1,7 @@
 import isodate
 
 from django import forms
+from django.utils.timezone import utc
 
 
 OPERATORS = (
@@ -120,7 +121,8 @@ class DateTimeField(MultiplePrefixedValueField, forms.DateTimeField):
 
     def strptime(self, value, format):
         try:
-            return isodate.parse_datetime(value)
+            d = isodate.parse_datetime(value)
+            return d.replace(tzinfo=utc)
         except ValueError:
             return super(DateTimeField, self).strptime(value, format)
 
