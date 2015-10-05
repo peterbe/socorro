@@ -30,7 +30,7 @@ sql = """
       select
         r.signature,  -- 0
         r.url,        -- 1
-        'http://crash-stats.mozilla.com/report/index/' || r.uuid as uuid_url, -- 2
+        'https://crash-stats.mozilla.com/report/index/' || r.uuid as uuid_url, -- 2
         to_char(r.client_crash_date,'YYYYMMDDHH24MI') as client_crash_date,   -- 3
         to_char(r.date_processed,'YYYYMMDDHH24MI') as date_processed,         -- 4
         r.last_crash, -- 5
@@ -253,45 +253,41 @@ def dailyUrlDump(
     process_crash=process_crash
 ):
 
-    try:
-        with get_output_context(config, day) as output_context:
-            execute_no_results(
-                connection,
-                """ SET TEMP_BUFFERS = %s """,
-                (config.database_temp_buffer_size,)
-            )
+    assert config.output_path, config.output_path
+    assert os.path.isdir(config.output_path), config.output_path
 
-            sql_parameters = setup_query_parameters(config, day)
-            config.logger.debug(
-                "day = %s; now = %s; yesterday = %s",
-                day,
-                sql_parameters.now_str,
-                sql_parameters.yesterday_str
-            )
-
-            with connection.cursor() as db_cursor:
-                sql_query = sql % sql_parameters
-                config.logger.debug("SQL is: %s", sql_query)
-                db_cursor.execute(sql_query)
-                headers_not_yet_written = True
-                while True:
-                    crash_row = db_cursor.fetchone()
-                    if crash_row is None:
-                        break
-                    if headers_not_yet_written:
-                        write_row(
-                            output_context,
-                            [x[0] for x in db_cursor.description]
-                        )
-                        headers_not_yet_written = False
-                    column_value_list = process_crash(crash_row)
-                    write_row(output_context, column_value_list)
-    except Exception, x:
-        config.logger.error(
-            'major problem running dailyUrlDump',
-            exc_info=True
+    with get_output_context(config, day) as output_context:
+        execute_no_results(
+            connection,
+            """ SET TEMP_BUFFERS = %s """,
+            (config.database_temp_buffer_size,)
         )
-        raise
+
+        sql_parameters = setup_query_parameters(config, day)
+        config.logger.debug(
+            "day = %s; now = %s; yesterday = %s",
+            day,
+            sql_parameters.now_str,
+            sql_parameters.yesterday_str
+        )
+
+        with connection.cursor() as db_cursor:
+            sql_query = sql % sql_parameters
+            config.logger.debug("SQL is: %s", sql_query)
+            db_cursor.execute(sql_query)
+            headers_not_yet_written = True
+            while True:
+                crash_row = db_cursor.fetchone()
+                if crash_row is None:
+                    break
+                if headers_not_yet_written:
+                    write_row(
+                        output_context,
+                        [x[0] for x in db_cursor.description]
+                    )
+                    headers_not_yet_written = False
+                column_value_list = process_crash(crash_row)
+                write_row(output_context, column_value_list)
 
 
 #==============================================================================
@@ -389,22 +385,29 @@ class DailyURLCronApp(BaseCronApp):
             location = day.strftime(location)
 
         if not server:
+            self.config.logger.warning(
+                "Not SSH'ing the %s file because no server is configured" % (
+                    public and 'public' or 'private'
+                )
+            )
             return
 
         if user:
             user += '@'
 
         command = 'scp "%s" "%s%s:%s"' % (file_path, user, server, location)
+        self.config.logger.debug(command)
         exit_code, stdout, stderr = self.run_process(command)
         if stderr:
-            self.config.logger.warn(
+            self.config.logger.warning(
                 "Error when scp'ing the file %s: %s" % (file_path, stderr)
             )
         if ssh_command:
             command = 'ssh "%s%s" "%s"' % (user, server, ssh_command)
+            self.config.logger.debug(command)
             exit_code, stdout, stderr = self.run_process(command)
             if stderr:
-                self.config.logger.warn(
+                self.config.logger.warning(
                     "Error when sending ssh command (%s): %s"
                     % (ssh_command, stderr)
                 )
