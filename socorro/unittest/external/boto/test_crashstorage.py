@@ -5,7 +5,7 @@
 import mock
 import json
 import tempfile
-
+import shutil
 from os.path import join
 
 import boto.exception
@@ -26,7 +26,6 @@ from socorro.database.transaction_executor import (
 from socorro.external.crashstorage_base import CrashIDNotFound
 import socorro.unittest.testbase
 
-TEMPDIR = tempfile.gettempdir()
 
 a_raw_crash = {
     "submitted_timestamp": "2013-01-09T22:21:18.646733+00:00"
@@ -45,6 +44,16 @@ BotoS3CrashStorage.conditional_exceptions = (ConditionallyABadDeal, )
 
 
 class TestCase(socorro.unittest.testbase.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        super(TestCase, cls).setUpClass()
+        cls.TEMPDIR = tempfile.mkdtemp()
+
+    @classmethod
+    def tearDownClass(cls):
+        super(TestCase, cls).tearDownClass()
+        shutil.rmtree(cls.TEMPDIR)
 
     def _fake_processed_crash(self):
         d = DotDict()
@@ -122,7 +131,7 @@ class TestCase(socorro.unittest.testbase.TestCase):
             'port': port,
             'access_key': 'this is the access key',
             'secret_access_key': 'secrets',
-            'temporary_file_system_storage_path': TEMPDIR,
+            'temporary_file_system_storage_path': self.TEMPDIR,
             'dump_file_suffix': '.dump',
             'bucket_name': 'mozilla-support-reason',
             'prefix': 'dev',
@@ -903,17 +912,17 @@ class TestCase(socorro.unittest.testbase.TestCase):
             result,
             {
                 'flash_dump': join(
-                    TEMPDIR,
+                    self.TEMPDIR,
                     '936ce666-ff3b-4c7a-9674-367fe2120408.flash_dump'
                         '.TEMPORARY.dump'
                 ),
                 'city_dump': join(
-                    TEMPDIR,
+                    self.TEMPDIR,
                     '936ce666-ff3b-4c7a-9674-367fe2120408.city_dump'
                         '.TEMPORARY.dump'
                 ),
                 'upload_file_minidump': join(
-                    TEMPDIR,
+                    self.TEMPDIR,
                     '936ce666-ff3b-4c7a-9674-367fe2120408'
                         '.upload_file_minidump.TEMPORARY.dump'
                 )
