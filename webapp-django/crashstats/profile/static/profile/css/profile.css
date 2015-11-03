@@ -1,47 +1,20 @@
 div.page-section {
-    width: 50%;
     display: inline-block;
     vertical-align: top;
-    padding-top: 0px;
-    padding-bottom: 0px;
-    margin-top: -20px;
+    width: 45%;
+    margin-left: 2.4%;
+    margin-right: 2.4%;
 }
 
 p.profile-email {
 	float: right;
 }
 
-/*From tokens home*/
-
-code {
-    background-color: #efefef;
-    border: 1px solid #ccc;
+.panel .links li {
+    display: inline-block;
+    font-size: 1.1em;
+    margin: 10px;
 }
-p.code code {
-    font-size: 1.5em;
-    padding: 6px;
-}
-p.code .rest-hidden {
-    display: none;
-}
-
-div.token {
-    border-top: 1px solid #ccc;
-    border-bottom: none;
-    padding: 25px 5px;
-}
-
-table.meta-data th {
-    vertical-align: top;
-}
-table.meta-data th,
-table.meta-data td {
-    padding: 2px 6px;
-    border: 0;
-}
-.is-expired {
-    color: red;
-    font-weight: bold;
-    font-size: 110%;
-    margin: 5px;
+.panel .links li.sign-out {
+    float: right;
 }
