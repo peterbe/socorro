@@ -1,20 +1,18 @@
 div.page-section {
     display: inline-block;
     vertical-align: top;
-    width: 45%;
-    margin-left: 2.4%;
-    margin-right: 2.4%;
+    width: 46%;
+}
+.page-section + .page-section {
+    float: right;
 }
 
 p.profile-email {
-	float: right;
+    float: right;
 }
 
 .panel .links li {
     display: inline-block;
     font-size: 1.1em;
     margin: 10px;
-}
-.panel .links li.sign-out {
-    float: right;
 }

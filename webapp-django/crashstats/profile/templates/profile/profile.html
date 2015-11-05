@@ -28,7 +28,8 @@
 
     <div class="page-heading">
         <p class="profile-email">
-            {{ request.user.email }}
+            {{ request.user.email }} -
+            {{ browserid_logout(text='Sign out') }}
         </p>
         <h2>Your Profile</h2>
     </div>
@@ -46,9 +47,6 @@
                 </li>
                 <li>
                     <a href="{{ url('symbols:home') }}">Symbols Upload</a>
-                </li>
-                <li class="sign-out">
-                    {{ browserid_logout(text='Sign out') }}
                 </li>
             </ul>
         </div>
