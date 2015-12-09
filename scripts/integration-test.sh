@@ -562,6 +562,8 @@ if [ $? = 1 ]
 then
     # something went wrong
     echo "ERROR: correlations produced unexpected output"
+    echo "***** BEGIN correlation log *****"
+    cat correlations.log
     echo "***** BEGIN correlation diff *****"
     cat correlation.diff
     echo "***** END correlation diff *****"
