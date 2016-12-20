@@ -1486,6 +1486,11 @@ class ADI(SocorroMiddleware):
         ('start_date', datetime.date),
         ('end_date', datetime.date),
         'product',
+        # ('versions', list),
+        # ('platforms', list),
+    )
+
+    possible_params = (
         ('versions', list),
         ('platforms', list),
     )

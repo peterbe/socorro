@@ -25,14 +25,15 @@ class ADI(PostgreSQLBase):
             ('product', '', 'str'),
             ('versions', [], 'list'),
             ('platforms', [], 'list'),
+            ('build_types', [], 'list'),
         ]
         params = external_common.parse_arguments(filters, kwargs)
         required = (
             'start_date',
             'end_date',
             'product',
-            'versions',
-            'platforms',
+            # 'versions',
+            # 'platforms',
         )
         missing = []
         for each in required:
@@ -41,25 +42,45 @@ class ADI(PostgreSQLBase):
         if missing:
             raise MissingArgumentError(', '.join(missing))
 
-        sql_versions = []
-        for i, version in enumerate(params['versions'], start=1):
-            key = 'version{}'.format(i)
-            # We make a very special exception for versions that end with
-            # the letter 'b'. It means it's a beta version and when some
-            # queries on that version they actually mean all
-            # the "sub-versions". For example version="19.0b" actually
-            # means "all versions starting with '19.0b'".
-            # This is succinct with what we do in SuperSearch.
-            if version.endswith('b'):
-                # exception!
-                sql_versions.append('pv.version_string LIKE %({})s'.format(
-                    key
-                ))
-                version += '%'
-            else:
-                # the norm
-                sql_versions.append('pv.version_string = %({})s'.format(key))
-            params[key] = version
+        if params['versions']:
+            versions = []
+            for i, version in enumerate(params['versions'], start=1):
+                key = 'version{}'.format(i)
+                # We make a very special exception for versions that end with
+                # the letter 'b'. It means it's a beta version and when some
+                # queries on that version they actually mean all
+                # the "sub-versions". For example version="19.0b" actually
+                # means "all versions starting with '19.0b'".
+                # This is succinct with what we do in SuperSearch.
+                if version.endswith('b'):
+                    # exception!
+                    versions.append('pv.version_string LIKE %({})s'.format(
+                        key
+                    ))
+                    version += '%'
+                else:
+                    # the norm
+                    versions.append('pv.version_string = %({})s'.format(key))
+                params[key] = version
+            sql_versions = 'AND ({})'.format(
+                ' OR '.join(versions)
+            )
+        else:
+            sql_versions = ''
+
+        if params['platforms']:
+            sql_platforms = 'AND os_name IN %(platforms)s'
+            params['platforms'] = tuple(params['platforms'])
+        else:
+            sql_platforms = ''
+
+        if params['build_types']:
+            build_types = []
+            sql_build_types = ' AND ({})'.format(
+                ' OR '.join(build_types)
+            )
+        else:
+            sql_build_types = ''
 
         sql = """
             SELECT
@@ -72,18 +93,20 @@ class ADI(PostgreSQLBase):
             LEFT OUTER JOIN product_versions pv USING (product_version_id)
             WHERE
                 pv.product_name = %(product)s
-                AND ({})
-                AND os_name IN %(platforms)s
+                {}
+                {}
+                {}
                 AND adu_date BETWEEN %(start_date)s AND %(end_date)s
             GROUP BY
                 adu_date,
                 build_type,
                 version_string
         """.format(
-            ' OR '.join(sql_versions)
+            sql_versions,
+            sql_platforms,
+            sql_build_types,
         )
 
-        params['platforms'] = tuple(params['platforms'])
         assert isinstance(params, dict)
         results = self.query(sql, params)
 

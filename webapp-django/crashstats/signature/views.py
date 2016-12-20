@@ -399,6 +399,7 @@ def signature_correlations(request, params):
 def signature_graph_data(request, params, channel):
     '''Return data for the graph of crashes/ADU against build date'''
 
+
     signature = params['signature'][0]
 
     # Check that a product was specified
@@ -449,17 +450,30 @@ def signature_graph_data(request, params, channel):
     if not end_date:
         end_date = datetime.datetime.utcnow()
 
-    # Get the graph data
-    api = models.AduBySignature()
-    data = api.get(
-        signature=signature,
-        product_name=product,
+    api = models.ADI()
+    adi_counts = api.get(
+        product=product,
+        # versions=params['version'],
         start_date=start_date,
         end_date=end_date,
-        channel=channel
+        # platforms=[x['name'] for x in platforms if x.get('display')],
     )
+    print adi_counts
 
-    return data
+    return {'hits': [], 'total':0}
+    # supersearch_api = Super
+
+    # # Get the graph data
+    # api = models.AduBySignature()
+    # data = api.get(
+    #     signature=signature,
+    #     product_name=product,
+    #     start_date=start_date,
+    #     end_date=end_date,
+    #     channel=channel
+    # )
+    #
+    # return data
 
 
 @pass_validated_params
