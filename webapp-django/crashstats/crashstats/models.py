@@ -1493,6 +1493,8 @@ class ADI(SocorroMiddleware):
     possible_params = (
         ('versions', list),
         ('platforms', list),
+        ('channels', list),
+        ('by_build', bool),
     )
 
     API_WHITELIST = (

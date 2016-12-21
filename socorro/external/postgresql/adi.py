@@ -25,7 +25,10 @@ class ADI(PostgreSQLBase):
             ('product', '', 'str'),
             ('versions', [], 'list'),
             ('platforms', [], 'list'),
-            ('build_types', [], 'list'),
+            # In (old) postgres it's called "build_type" but the (new)
+            # name we want to "promote" is "channel"
+            ('channels', [], 'list'),
+            ('by_build', False, bool),
         ]
         params = external_common.parse_arguments(filters, kwargs)
         required = (
@@ -74,38 +77,78 @@ class ADI(PostgreSQLBase):
         else:
             sql_platforms = ''
 
-        if params['build_types']:
+        if params['channels']:
             build_types = []
-            sql_build_types = ' AND ({})'.format(
-                ' OR '.join(build_types)
-            )
+            sql_build_types = ' AND pv.build_type IN %(build_types)s'
+            params['build_types'] = tuple(params['channels'])
         else:
             sql_build_types = ''
 
+        if params['by_build']:
+            sql_table = 'build_adu'
+            sql_selects = [
+                'SUM(adu_count)::BIGINT AS adi_count',
+                'build_adu.build_date',
+                'pv.build_type',
+                'pv.version_string AS version',
+            ]
+            sql_group_by = [
+                'build_adu.build_date',
+                'build_type',
+                'version_string',
+            ]
+            sql_date_range = (
+                'AND build_adu.build_date BETWEEN %(start_date)s AND %(end_date)s'
+            )
+        else:
+            sql_table = 'product_adu'
+            sql_selects = [
+                'SUM(adu_count)::BIGINT AS adi_count',
+                'adu_date AS date',
+                'pv.build_type',
+                'pv.version_string AS version',
+            ]
+            sql_group_by = [
+                'adu_date',
+                'build_type',
+                'version_string',
+            ]
+            sql_date_range = (
+                'AND adu_date BETWEEN %(start_date)s AND %(end_date)s'
+            )
+
         sql = """
             SELECT
-                SUM(adu_count)::BIGINT AS adi_count,
-                adu_date AS date,
-                pv.build_type,
-                pv.version_string AS version
+                {selects}
             FROM
-                product_adu
+                {table}
             LEFT OUTER JOIN product_versions pv USING (product_version_id)
             WHERE
                 pv.product_name = %(product)s
-                {}
-                {}
-                {}
-                AND adu_date BETWEEN %(start_date)s AND %(end_date)s
+                {versions}
+                {platforms}
+                {build_types}
+                {date_range}
             GROUP BY
-                adu_date,
-                build_type,
-                version_string
+                {group_by}
+
         """.format(
-            sql_versions,
-            sql_platforms,
-            sql_build_types,
+            selects=',\n'.join(sql_selects),
+            table=sql_table,
+            versions=sql_versions,
+            platforms=sql_platforms,
+            build_types=sql_build_types,
+            date_range=sql_date_range,
+            group_by=',\n'.join(sql_group_by),
         )
+
+        # print "\nSQL"
+        # print sql
+        # print "\nPARAMS"
+        # from pprint import pprint
+        # pprint(params)
+        #print "\n", '-'*100
+
 
         assert isinstance(params, dict)
         results = self.query(sql, params)

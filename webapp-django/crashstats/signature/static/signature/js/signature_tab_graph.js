@@ -143,6 +143,7 @@ SignatureReport.GraphTab.prototype.formatData = function(data) {
 
     // Reshape into the format required to draw the graph.
     finalData = finalData.map(function(d) {
+        console.log('KEY', d.key, typeof d.key);
         return {
             'build_id': d.key,
             'date': d.key,
@@ -168,6 +169,9 @@ SignatureReport.GraphTab.prototype.drawGraph = function(data, contentElement) {
     });
 
     contentElement.empty().append(graphElement);
+
+    console.log("DATA", data);
+
 
     MG.data_graphic({
         data: data,

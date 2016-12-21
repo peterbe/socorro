@@ -201,6 +201,8 @@ def _get_crashes_per_day_with_adu(
     params, start_date, end_date, platforms, _date_range_type
 ):
     api = SuperSearchUnredacted()
+    print "CRASHES_PER_DAY PARAMS"
+    print params
     results = api.get(**params)
 
     platforms_api = models.Platforms()

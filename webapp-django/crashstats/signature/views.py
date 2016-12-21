@@ -1,6 +1,7 @@
 import datetime
 import functools
 import math
+import collections
 
 from django import http
 from django.conf import settings
@@ -450,30 +451,109 @@ def signature_graph_data(request, params, channel):
     if not end_date:
         end_date = datetime.datetime.utcnow()
 
+    from pprint import pprint
+
     api = models.ADI()
     adi_counts = api.get(
         product=product,
         # versions=params['version'],
         start_date=start_date,
         end_date=end_date,
+        channels=[channel],
+        by_build=True,
         # platforms=[x['name'] for x in platforms if x.get('display')],
     )
-    print adi_counts
+    # This is grouped by (in SQL) build_date, build_type and version.
+    # The build_type is always the same since it was sent in as a
+    # filtering parameter.
+    # We need to roll it up to one count per build_date across all versions
+    adi_by_build_date = collections.defaultdict(int)
+    # print adi_counts['hits']
+    for hit in adi_counts['hits']:
+        adi_by_build_date[hit['build_date']] += hit['adi_count']
+        # print adi_counts
 
-    return {'hits': [], 'total':0}
+    pprint(dict(adi_by_build_date))
+
+    api = models.ProductBuildTypes()
+    product_build_types = api.get(product=params['product'])['hits']
+    throttle = product_build_types[channel]
+
+    print "____DATES _____"
+    print(start_date,end_date)
+    api = SuperSearchUnredacted()
+    supersearch_params = {
+        'product': product,
+        'build_id': [
+            '>={}'.format(start_date.strftime('%Y%m%d%H%M%S')),
+            '<{}'.format(end_date.strftime('%Y%m%d%H%M%S')),
+        ],
+        'release_channel': channel,
+        'signature=': '={}'.format(signature),
+        '_histogram.build_id': ['build_id'],
+        '_facets': ['build_id'],
+        '_results_number': 0,
+    }
+    # print "PARAMS"
+    # pprint(supersearch_params)
+    results = api.get(**supersearch_params)
+    # pprint(results['facets'])
+    # print "KEYS"
+    # print results['facets'].keys()
+    crashes_by_build_id = []
+    # pprint(results['facets'])
+    for group in results['facets']['histogram_build_id']:
+        crashes_by_build_id.append((group['term'], group['count']))
+
+    print "CRASHES BY BUILD ID"
+    pprint(crashes_by_build_id)
+
+    hits = []
+    for build_id, crash_count in crashes_by_build_id:
+        # build_id_to_date =
+        yyyymmdd = str(build_id)[:8]
+        build_id_date = datetime.date(
+            int(yyyymmdd[:4]),
+            int(yyyymmdd[4:6]),
+            int(yyyymmdd[6:8]),
+        )
+        adi_count = adi_by_build_date[build_id_date]
+        hits.append({
+            'build_date': build_id_date.strftime('%Y-%m-%d'),
+            'buildid': str(build_id),
+            'adu_count': adi_count,
+            'crash_count': crash_count,
+            # 'adu_date'
+        })
+        # )'{}-{}-{}'.format(
+        #     yyyymmdd[:4],
+        #     yyyymmdd[4:6],
+        #     yyyymmdd[6:8],
+        # )
+        # build_id_to_date =
+
+    # return {'hits': [], 'total':0}
     # supersearch_api = Super
 
-    # # Get the graph data
-    # api = models.AduBySignature()
-    # data = api.get(
-    #     signature=signature,
-    #     product_name=product,
-    #     start_date=start_date,
-    #     end_date=end_date,
-    #     channel=channel
-    # )
-    #
-    # return data
+    # Get the graph data
+    api = models.AduBySignature()
+    data = api.get(
+        signature=signature,
+        product_name=product,
+        start_date=start_date,
+        end_date=end_date,
+        channel=channel
+    )
+
+    print "_______OLD DATA______"
+    print data
+
+    print "_______NEW DATA_______"
+    new_data = {'hits': hits, 'total': len(hits)}
+    print new_data
+    return new_data
+
+    return data
 
 
 @pass_validated_params
