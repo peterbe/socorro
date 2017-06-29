@@ -6,6 +6,7 @@ import datetime
 import json
 
 import requests_mock
+import mock
 from nose.tools import assert_raises, eq_, ok_
 
 from socorro.lib import BadArgumentError, datetimeutil, search_common
@@ -13,6 +14,7 @@ from socorro.unittest.external.es.base import (
     ElasticsearchTestCase,
     SuperSearchWithFields,
     minimum_es_version,
+    SUPERSEARCH_FIELDS,
 )
 
 # Uncomment these lines to decrease verbosity of the elasticsearch library
@@ -26,9 +28,11 @@ class IntegrationTestSuperSearch(ElasticsearchTestCase):
     """Test SuperSearch with an elasticsearch database containing fake
     data. """
 
-    def setUp(self):
+    @mock.patch('socorro.external.es.super_search_fields.SuperSearchFields')
+    def setUp(self, ssf_mock):
         super(IntegrationTestSuperSearch, self).setUp()
 
+        ssf_mock().get_fields.return_value = SUPERSEARCH_FIELDS
         self.api = SuperSearchWithFields(config=self.config)
         self.now = datetimeutil.utc_now()
 
@@ -100,6 +104,7 @@ class IntegrationTestSuperSearch(ElasticsearchTestCase):
         eq_(res['hits'][0]['signature'], 'js::break_your_browser')
 
         eq_(res['facets'].keys(), ['signature'])
+        print(res)
         eq_(
             res['facets']['signature'][0],
             {'term': 'js::break_your_browser', 'count': 1}
