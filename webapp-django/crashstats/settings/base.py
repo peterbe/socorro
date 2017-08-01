@@ -740,7 +740,7 @@ CSP_IMG_SRC = (
     'https://www.google-analytics.com',
     'data:',  # what jquery.tablesorter.js's CSS uses
 )
-CSP_CHILD_SRC = (
+CSP_FRAME_SRC = (
     "'self'",
     'accounts.google.com',  # Google Sign-In uses an iframe
 )
